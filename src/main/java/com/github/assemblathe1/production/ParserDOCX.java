@@ -11,12 +11,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ParserDOCX {
-    private final XWPFDocument templateXWPFDocument;
+//    private final XWPFDocument templateXWPFDocument;
     private final Path valuesListTXT;
+    private final Path templateDOCXFile;
 
     public ParserDOCX(Path templateDOCXFile, Path valuesListTXT) throws IOException, InvalidFormatException {
         this.valuesListTXT = valuesListTXT;
-        this.templateXWPFDocument = getTemplateDOCXFile(templateDOCXFile);
+        this.templateDOCXFile = templateDOCXFile;
+//        this.templateXWPFDocument = getTemplateDOCXFile(templateDOCXFile);
 
     }
 
@@ -34,8 +36,17 @@ public class ParserDOCX {
     public boolean createSpecificXWPFDocuments(Path directoryToSave) {
         try {
             createListInsertValues(valuesListTXT).forEach(value -> {
-                XWPFParagraph convertibleXWPFParagraph = templateXWPFDocument.getParagraphs().get(19);
-                convertibleXWPFParagraph.getRuns().forEach(xwpfRun -> {
+                XWPFDocument templateXWPFDocument = null;
+                try {
+                    templateXWPFDocument = getTemplateDOCXFile(templateDOCXFile);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InvalidFormatException e) {
+                    e.printStackTrace();
+                }
+//                XWPFParagraph convertibleXWPFParagraph = templateXWPFDocument.getParagraphs().get(19);
+//                System.out.println(convertibleXWPFParagraph.getText());
+                templateXWPFDocument.getParagraphs().get(19).getRuns().forEach(xwpfRun -> {
                             String text = xwpfRun.getText(0);
                             if (text != null && text.contains("_id_")) {
                                 text = text.replace("_id_", value);
@@ -43,9 +54,6 @@ public class ParserDOCX {
                             }
                         }
                 );
-
-//                convertibleXWPFParagraph.removeRun(0);
-//                convertibleXWPFParagraph.createRun().setText(value);
                 try {
                     writeDOCXFileToDisk(directoryToSave, templateXWPFDocument, value);
                 } catch (IOException e) {
