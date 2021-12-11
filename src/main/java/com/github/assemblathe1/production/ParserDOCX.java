@@ -35,8 +35,17 @@ public class ParserDOCX {
         try {
             createListInsertValues(valuesListTXT).forEach(value -> {
                 XWPFParagraph convertibleXWPFParagraph = templateXWPFDocument.getParagraphs().get(19);
-                convertibleXWPFParagraph.removeRun(0);
-                convertibleXWPFParagraph.createRun().setText(value);
+                convertibleXWPFParagraph.getRuns().forEach(xwpfRun -> {
+                            String text = xwpfRun.getText(0);
+                            if (text != null && text.contains("_id_")) {
+                                text = text.replace("_id_", value);
+                                xwpfRun.setText(text, 0);
+                            }
+                        }
+                );
+
+//                convertibleXWPFParagraph.removeRun(0);
+//                convertibleXWPFParagraph.createRun().setText(value);
                 try {
                     writeDOCXFileToDisk(directoryToSave, templateXWPFDocument, value);
                 } catch (IOException e) {
