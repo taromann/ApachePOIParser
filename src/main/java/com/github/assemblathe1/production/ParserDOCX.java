@@ -39,7 +39,6 @@ public class ParserDOCX {
                     templateXWPFDocument.getParagraphs().forEach(xwpfParagraph -> {
                         xwpfParagraph.getRuns().forEach(xwpfRun -> {
                                     String text = xwpfRun.getText(0);
-                            System.out.println(text);
                             if (text != null && text.contains("organisation")) {
                                         text = text.replace("organisation", value);
                                         xwpfRun.setText(text, 0);
