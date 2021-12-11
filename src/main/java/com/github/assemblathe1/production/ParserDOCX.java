@@ -3,15 +3,18 @@ package com.github.assemblathe1.production;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ParserDOCX {
     private final Path valuesListTXT;
     private final Path templateDOCXFile;
+    private final List<String> keys = List.of("organisation", "number");
 
     public ParserDOCX(Path templateDOCXFile, Path valuesListTXT) throws IOException, InvalidFormatException {
         this.valuesListTXT = valuesListTXT;
@@ -35,34 +38,41 @@ public class ParserDOCX {
             createListInsertValues(valuesListTXT).forEach(value -> {
                 try {
                     XWPFDocument templateXWPFDocument = getTemplateDOCXFile(templateDOCXFile);
-
                     templateXWPFDocument.getParagraphs().forEach(xwpfParagraph -> {
                         xwpfParagraph.getRuns().forEach(xwpfRun -> {
-                                    String text = xwpfRun.getText(0);
-                            if (text != null && text.contains("organisation")) {
-                                        text = text.replace("organisation", value);
-                                        xwpfRun.setText(text, 0);
-                                    }
+                                     insertTextValueIntoXWPFRun(value, xwpfRun);
                                 }
                         );
                     });
+                    writeDOCXFileToDisk(directoryToSave, templateXWPFDocument, value);
 
-                    try {
-                        writeDOCXFileToDisk(directoryToSave, templateXWPFDocument, value);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 } catch (IOException | InvalidFormatException e) {
                     e.printStackTrace();
                 }
-
-
             });
             return true;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private void insertTextValueIntoXWPFRun(String value, XWPFRun xwpfRun) {
+        String text = xwpfRun.getText(0);
+//        System.out.println(text);
+        keys.forEach(key -> {
+            if (text != null) {
+                if (text.contains(key)) {
+                    replaceText(value, xwpfRun, text, key);
+                }
+            }
+        });
+
+    }
+
+    private void replaceText(String value, XWPFRun xwpfRun, String key, String text) {
+        text = text.replace(key, value);
+        xwpfRun.setText(text, 0);
     }
 
     private void writeDOCXFileToDisk(Path directoryToSave, XWPFDocument docxFile, String name) throws IOException {
