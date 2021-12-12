@@ -5,12 +5,10 @@ import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ParserDOCX {
     private final Path valuesListTXT;
@@ -34,11 +32,11 @@ public class ParserDOCX {
         return new XWPFDocument(OPCPackage.open(fis));
     }
 
-//    private List<String> createListInsertValues(Path valuesListTXT) throws FileNotFoundException {
-//        FileInputStream fileInputStream = new FileInputStream(String.valueOf(valuesListTXT));
-//        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
-//        return bufferedReader.lines().collect(Collectors.toList());
-//    }
+    private List<String> createListInsertValues(Path valuesListTXT) throws FileNotFoundException {
+        FileInputStream fileInputStream = new FileInputStream(String.valueOf(valuesListTXT));
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
+        return bufferedReader.lines().collect(Collectors.toList());
+    }
 
     public boolean createSpecificXWPFDocuments(Path directoryToSave) {
         //            createListInsertValues(valuesListTXT).forEach(value -> {
