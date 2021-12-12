@@ -2,29 +2,29 @@ package com.github.assemblathe1.production;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 
 import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ParserDOCX {
     private final Path templateDOCXFile;
-//    private final Path numbersListTXT;
-//    private final Path organisationsListTXT;
-//    private final Path addressesListTXT;
     private final List<String> keys = List.of("organisation", "number", "address");
-    private List<ObjectToInsert> allObjectsForParsing;
+    private final List<ObjectToInsert> allObjectsForParsing;
 
-    public ParserDOCX(Path templateDOCXFile, Path numbersListTXT, Path organisationsListTXT, Path addressesListTXT) throws FileNotFoundException {
+    public ParserDOCX(Path templateDOCXFile, Path sourseXLXSTable) throws IOException {
         this.templateDOCXFile = templateDOCXFile;
-//        this.numbersListTXT = numbersListTXT;
-//        this.organisationsListTXT = organisationsListTXT;
-//        this.addressesListTXT = addressesListTXT;
-        allObjectsForParsing = getObjectsForParsing(numbersListTXT, organisationsListTXT, addressesListTXT);
+        allObjectsForParsing = getObjectsForParsing(sourseXLXSTable);
     }
 
     private XWPFDocument getTemplateDOCXFile(Path templateDOCXFile) throws IOException, InvalidFormatException {
@@ -38,8 +38,7 @@ public class ParserDOCX {
         return bufferedReader.lines().collect(Collectors.toList());
     }
 
-    public boolean createSpecificXWPFDocuments(Path directoryToSave) {
-        //            createListInsertValues(valuesListTXT).forEach(value -> {
+    public void createSpecificXWPFDocuments(Path directoryToSave) {
         allObjectsForParsing.forEach(currentObjectToInsert -> {
             try {
                 XWPFDocument templateXWPFDocument = getTemplateDOCXFile(templateDOCXFile);
@@ -50,17 +49,14 @@ public class ParserDOCX {
                     );
                 });
                 writeDOCXFileToDisk(directoryToSave, templateXWPFDocument, currentObjectToInsert.getOrganisation());
-
             } catch (IOException | InvalidFormatException e) {
                 e.printStackTrace();
             }
         });
-        return true;
     }
 
     private void insertTextValueIntoXWPFRun(ObjectToInsert currentObjectToInsert, XWPFRun xwpfRun) {
         String text = xwpfRun.getText(0);
-//        System.out.println(text);
         keys.forEach(key -> {
             if (text != null) {
                 if (text.contains(key)) {
@@ -68,29 +64,32 @@ public class ParserDOCX {
                 }
             }
         });
-
     }
 
     private void replaceText(XWPFRun xwpfRun, String text, String key, ObjectToInsert currentObjectToInsert) {
-        if (key == "organisation") {
+        if (Objects.equals(key, "organisation")) {
             text = text.replace(key, currentObjectToInsert.getOrganisation());
-        } else if (key == "number") {
-            text = text.replace(key, currentObjectToInsert.getNumber());
-        } else if (key == "address") {
+        } else if (Objects.equals(key, "number")) {
+            text = text.replace(key, currentObjectToInsert.getNumber().toString());
+        } else if (Objects.equals(key, "address")) {
             text = text.replace(key, currentObjectToInsert.getAddress());
         }
-
         xwpfRun.setText(text, 0);
-
     }
 
-    public List<ObjectToInsert> getObjectsForParsing(Path numbers, Path organisations, Path addresses) throws FileNotFoundException {
+    public List<ObjectToInsert> getObjectsForParsing(Path sourseXLXSTable) throws IOException {
         List<ObjectToInsert> allObjectsForParsing = new ArrayList<>();
-        List<String> numbersList = createListInsertValues(numbers);
-        List<String> organisationList = createListInsertValues(organisations);
-        List<String> addressesList = createListInsertValues(addresses);
-        for (int i = 0; i < numbersList.size(); i++) {
-            allObjectsForParsing.add(new ObjectToInsert(numbersList.get(i), organisationList.get(i), addressesList.get(i)));
+        FileInputStream file = new FileInputStream(String.valueOf(sourseXLXSTable));
+        XSSFWorkbook workbook = new XSSFWorkbook(file);
+        XSSFSheet sheet = workbook.getSheetAt(0);
+        Iterator<Row> rowIterator = sheet.iterator();
+
+        while (rowIterator.hasNext()) {
+            Row row = rowIterator.next();
+            Cell number = row.getCell(0);
+            Cell organisation = row.getCell(1);
+            Cell address = row.getCell(2);
+            allObjectsForParsing.add(new ObjectToInsert(number.getNumericCellValue(), organisation.getStringCellValue(), address.getStringCellValue()));
         }
         return allObjectsForParsing;
     }

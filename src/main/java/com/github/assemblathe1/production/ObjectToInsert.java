@@ -4,14 +4,17 @@ import lombok.Data;
 
 @Data
 public class ObjectToInsert {
-    String number;
+    Double number;
     String organisation;
     String address;
 
-    public ObjectToInsert(String number, String organisation, String address) {
+    public ObjectToInsert(Double number, String organisation, String address) {
         this.number = number;
         this.organisation = organisation;
         this.address = address;
     }
 
+    public Integer getNumber() {
+        return number.intValue();
+    }
 }
