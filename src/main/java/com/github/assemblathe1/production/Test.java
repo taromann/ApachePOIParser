@@ -9,7 +9,9 @@ import java.nio.file.Paths;
 public class Test {
     public static void main(String[] args) throws IOException, InvalidFormatException {
         Path templateDOCX = Paths.get("C:\\in\\1.docx");
-        Path listValuesTXT = Paths.get("C:\\in\\1.txt");
-        new ParserDOCX(templateDOCX, listValuesTXT).createSpecificXWPFDocuments(Path.of("C:\\in"));
+        Path numbersListTXT = Paths.get("C:\\in\\Numbers.txt");
+        Path organisationsListTXT = Paths.get("C:\\in\\Organisations.txt");
+        Path addressesListTXT = Paths.get("C:\\in\\Addresses.txt");
+        new ParserDOCX(templateDOCX, numbersListTXT, organisationsListTXT, addressesListTXT).createSpecificXWPFDocuments(Path.of("C:\\in"));
     }
 }
